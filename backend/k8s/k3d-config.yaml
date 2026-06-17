@@ -1,0 +1,17 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: dev-cluster
+servers: 1
+agents: 2
+image: rancher/k3s:v1.28.2-k3s1
+ports:
+  - port: 8080:80 # Maps localhost:8080 to the cluster's incoming web traffic
+    nodeFilters:
+      - loadbalancer
+options:
+  k3d:
+    wait: true # Ensures the command doesn't finish until the cluster is fully ready
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true

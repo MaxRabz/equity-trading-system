@@ -1,0 +1,12 @@
+---
+services:
+  toolbox:
+    build:
+      context: .
+      dockerfile: Dockerfile.toolbox
+    container_name: k8s-toolbox
+    volumes:
+      # This is the "Docker-out-of-Docker" magic
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mounts your entire project root into the container's /workspace
+      - ../../:/workspace
