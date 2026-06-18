@@ -11,6 +11,9 @@ from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 
 app = FastAPI()
+# Initalize Data
+# region
+
 
 redis_port_number = (
     6379  # Default Redis port TODO update this port once agreed upon port
@@ -69,6 +72,8 @@ async def startup():
 async def shutdown():
     await app.state.pg_pool.close()
 
+
+# endregion
 
 # Login details
 # region
@@ -170,12 +175,11 @@ async def verify_cookie(session: str = Cookie(None)):
         username = payload.get("username")
         if not username:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return username,
+        return (username,)
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
-
 
 
 # Account details
@@ -233,6 +237,8 @@ async def add_account(account_id: str, username: str = Depends(verify_cookie)):
 
 # Positions
 # region
+
+
 @app.get("/positions")
 async def get_users_positions(username: str = Depends(verify_cookie)):
 
@@ -566,8 +572,11 @@ async def get_all_user_trades(request: Request, username: str = Depends(verify_c
 
     return [dict(row) for row in rows]
 
+
 @app.get("/trades/account/{account_id}")
-async def get_all_user_trades_for_account(account_id: str, request: Request, username: str = Depends(verify_cookie)):
+async def get_all_user_trades_for_account(
+    account_id: str, request: Request, username: str = Depends(verify_cookie)
+):
 
     raw_user = await redis_client.hget(redis_dictionaries[0], username)
     user_data = json.loads(raw_user)
@@ -586,13 +595,16 @@ async def get_all_user_trades_for_account(account_id: str, request: Request, use
         ORDER BY trade_time DESC
         """,
         user_data["user_id"],
-        account_id
+        account_id,
     )
 
     return [dict(row) for row in rows]
 
+
 @app.get("/trades/ticker/{ticker}")
-async def get_all_user_trades_for_ticker(ticker: str, request: Request, username: str = Depends(verify_cookie)):
+async def get_all_user_trades_for_ticker(
+    ticker: str, request: Request, username: str = Depends(verify_cookie)
+):
 
     raw_user = await redis_client.hget(redis_dictionaries[0], username)
     user_data = json.loads(raw_user)
@@ -610,13 +622,19 @@ async def get_all_user_trades_for_ticker(ticker: str, request: Request, username
         ORDER BY trade_time DESC
         """,
         user_data["user_id"],
-        ticker
+        ticker,
     )
 
     return [dict(row) for row in rows]
 
+
 @app.get("/trades/account/{account_id}/ticker.{ticker}")
-async def get_all_user_trades_for_account_for_ticker(account_id: str, ticker: str, request: Request, username: str = Depends(verify_cookie)):
+async def get_all_user_trades_for_account_for_ticker(
+    account_id: str,
+    ticker: str,
+    request: Request,
+    username: str = Depends(verify_cookie),
+):
 
     raw_user = await redis_client.hget(redis_dictionaries[0], username)
     user_data = json.loads(raw_user)
@@ -625,7 +643,7 @@ async def get_all_user_trades_for_account_for_ticker(account_id: str, ticker: st
         raise HTTPException(
             status_code=401, detail="You do not have access to this account"
         )
-    
+
     raw_ticker = await redis_client.hget(redis_dictionaries[2], ticker)
     if not raw_ticker:
         raise HTTPException(status_code=404, detail="This ticker does not exist")
@@ -641,13 +659,16 @@ async def get_all_user_trades_for_account_for_ticker(account_id: str, ticker: st
         """,
         user_data["user_id"],
         account_id,
-        ticker
+        ticker,
     )
 
     return [dict(row) for row in rows]
 
+
 @app.get("/trades/{trade_id}")
-async def get_specific_trade(trade_id: str, request: Request, username: str = Depends(verify_cookie)):
+async def get_specific_trade(
+    trade_id: str, request: Request, username: str = Depends(verify_cookie)
+):
 
     raw_user = await redis_client.hget(redis_dictionaries[0], username)
     user_data = json.loads(raw_user)
@@ -661,9 +682,10 @@ async def get_specific_trade(trade_id: str, request: Request, username: str = De
         ORDER BY trade_time DESC
         """,
         user_data["user_id"],
-        trade_id
+        trade_id,
     )
 
     return [dict(row) for row in rows]
+
 
 # endregion
