@@ -157,7 +157,7 @@ async def login_user(request: LoginRequest, response: Response):
     id = None
 
     for user_id, user in positions.items():
-        if username == user["username"] and not pwd_context.verify(
+        if username == user["username"] and pwd_context.verify(
             password, user["password_hash"]
         ):
             valid = True
@@ -649,7 +649,7 @@ async def get_all_user_trades_for_ticker(
     return [dict(row) for row in rows]
 
 
-@app.get("/trades/account/{account_id}/ticker.{ticker}")
+@app.get("/trades/account/{account_id}/ticker/{ticker}")
 async def get_all_user_trades_for_account_for_ticker(
     account_id: str,
     ticker: str,
@@ -681,6 +681,158 @@ async def get_all_user_trades_for_account_for_ticker(
         user_id,
         account_id,
         ticker,
+    )
+
+    return [dict(row) for row in rows]
+
+
+@app.get("/trades/{trade_id}")
+async def get_specific_trade(
+    trade_id: str, request: Request, user_id: str = Depends(verify_cookie)
+):
+
+    rows = await request.app.state.pg_pool.fetch(
+        """
+        SELECT *
+        FROM trade
+        WHERE user_id = $1
+            AND trade_id = $2
+        ORDER BY trade_time DESC
+        """,
+        user_id,
+        trade_id,
+    )
+
+    return [dict(row) for row in rows]
+
+
+@app.get("/trades/time/{time_start}/{time_end}")
+async def get_all_user_trades_for_time(
+    request: Request,
+    time_start: time,
+    time_end: time,
+    user_id: str = Depends(verify_cookie),
+):
+
+    rows = await request.app.state.pg_pool.fetch(
+        """
+        SELECT *
+        FROM trade
+        WHERE user_id = $1
+            AND created_at BETWEEN $2 AND $3
+        ORDER BY trade_time DESC
+        """,
+        user_id,
+        time_start,
+        time_end,
+    )
+
+    return [dict(row) for row in rows]
+
+
+@app.get("/trades/account/{account_id}/time/{time_start}/{time_end}")
+async def get_all_user_trades_for_account_for_time(
+    account_id: str,
+    request: Request,
+    time_start: time,
+    time_end: time,
+    user_id: str = Depends(verify_cookie),
+):
+
+    raw_user = await redis_client.hget(redis_dictionaries[0], user_id)
+    user_data = json.loads(raw_user)
+
+    if account_id not in user_data["accounts"]:
+        raise HTTPException(
+            status_code=401, detail="You do not have access to this account"
+        )
+
+    rows = await request.app.state.pg_pool.fetch(
+        """
+        SELECT *
+        FROM trade
+        WHERE user_id = $1
+            AND account_id = $2
+            AND created_at BETWEEN $3 AND $4
+        ORDER BY trade_time DESC
+        """,
+        user_id,
+        account_id,
+        time_start,
+        time_end,
+    )
+
+    return [dict(row) for row in rows]
+
+
+@app.get("/trades/ticker/{ticker}/time/{time_start}/{time_end}")
+async def get_all_user_trades_for_ticker_for_time(
+    ticker: str,
+    request: Request,
+    time_start: time,
+    time_end: time,
+    user_id: str = Depends(verify_cookie),
+):
+
+    raw_ticker = await redis_client.hget(redis_dictionaries[2], ticker)
+    if not raw_ticker:
+        raise HTTPException(status_code=404, detail="This ticker does not exist")
+
+    rows = await request.app.state.pg_pool.fetch(
+        """
+        SELECT *
+        FROM trade
+        WHERE user_id = $1
+            AND ticker = $2
+            AND created_at BETWEEN $3 AND $4
+        ORDER BY trade_time DESC
+        """,
+        user_id,
+        ticker,
+        time_start,
+        time_end,
+    )
+
+    return [dict(row) for row in rows]
+
+
+@app.get("/trades/account/{account_id}/ticker/{ticker}/time/{time_start}/{time_end}")
+async def get_all_user_trades_for_account_for_ticker_for_time(
+    account_id: str,
+    ticker: str,
+    request: Request,
+    time_start: time,
+    time_end: time,
+    user_id: str = Depends(verify_cookie),
+):
+
+    raw_user = await redis_client.hget(redis_dictionaries[0], user_id)
+    user_data = json.loads(raw_user)
+
+    if account_id not in user_data["accounts"]:
+        raise HTTPException(
+            status_code=401, detail="You do not have access to this account"
+        )
+
+    raw_ticker = await redis_client.hget(redis_dictionaries[2], ticker)
+    if not raw_ticker:
+        raise HTTPException(status_code=404, detail="This ticker does not exist")
+
+    rows = await request.app.state.pg_pool.fetch(
+        """
+        SELECT *
+        FROM trade
+        WHERE user_id = $1
+            AND account_id = $2
+            AND ticker = $3
+            AND created_at BETWEEN $4 AND $5
+        ORDER BY trade_time DESC
+        """,
+        user_id,
+        account_id,
+        ticker,
+        time_start,
+        time_end,
     )
 
     return [dict(row) for row in rows]
