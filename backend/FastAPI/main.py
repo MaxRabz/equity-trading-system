@@ -13,15 +13,25 @@ from contextlib import asynccontextmanager
 from prometheus_fastapi_instrumentator import Instrumentator
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.pg_pool = await asyncpg.create_pool(
+        host=postgress_docker_name,
+        port=postgres_port_number,
+        user="postgres",
+        password="password",
+        database="trading",
+    )
+    yield
+    await app.state.pg_pool.close()
+
+
+app = FastAPI(lifespan=lifespan)
 # Initalize Data
 # region
 
 
-Instrumentator().instrument(app).expose(
-    app,
-    endpoint="/metrics"
-)
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 redis_port_number = (
     6379  # Default Redis port TODO update this port once agreed upon port
@@ -63,19 +73,6 @@ def create_cookie(username: str):
 
 # Initialize Redis client
 redis_client = AsyncRedis(host=redis_host, port=redis_port_number, db=0)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    app.state.pg_pool = await asyncpg.create_pool(
-        host=postgress_docker_name,
-        port=postgres_port_number,
-        user="postgres",
-        password="password",
-        database="trading",
-    )
-    yield
-    await app.state.pg_pool.close()
 
 
 # endregion
