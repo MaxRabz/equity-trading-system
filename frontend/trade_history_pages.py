@@ -8,7 +8,24 @@ from api_client import (
     get_trade_by_id,
     update_trade,
 )
-from account_picker import account_select
+from account_picker import account_select, get_account_name
+
+
+def _trade_card(trade):
+    ticker = trade.get("symbol_ticker") or trade.get("ticker", "—")
+    with st.container(border=True):
+        cols = st.columns([3, 2, 2])
+        cols[0].write(f"**{trade.get('direction', '—')} {ticker}**")
+        cols[1].write(f"Qty: {trade.get('quantity', '—')}")
+        cols[2].write(f"${trade.get('price', '—')}")
+
+        cols2 = st.columns([2, 3])
+        cols2[0].caption(f"Account: {get_account_name(trade.get('account_id'))}")
+        if trade.get("trade_id"):
+            cols2[1].caption(f"Trade ID: {trade['trade_id']}")
+
+        if trade.get("created_at"):
+            st.caption(f"Booked: {trade['created_at']}")
 
 
 def _render_trades_table(result):
@@ -22,15 +39,7 @@ def _render_trades_table(result):
         return
 
     for trade in trades:
-        ticker = trade.get("symbol_ticker") or trade.get("ticker", "—")
-        with st.container(border=True):
-            cols = st.columns([3, 2, 2, 2, 3])
-            cols[0].write(f"**{trade.get('direction', '—')} {ticker}**")
-            cols[1].write(f"Qty: {trade.get('quantity', '—')}")
-            cols[2].write(f"${trade.get('price', '—')}")
-            cols[3].caption(f"`{trade.get('account_id', '—')}`")
-            if trade.get("created_at"):
-                cols[4].caption(f"Booked: {trade['created_at']}")
+        _trade_card(trade)
 
 
 @st.fragment(run_every="15s")
@@ -110,17 +119,7 @@ def _trade_by_id_fragment(trade_id):
         return
 
     for trade in trades:
-        ticker = trade.get("symbol_ticker") or trade.get("ticker", "—")
-        with st.container(border=True):
-            st.markdown(
-                f"**{trade.get('direction', '—')} {trade.get('quantity', '—')} {ticker}**"
-                f"  —  account `{trade.get('account_id', '—')}`"
-            )
-            cols = st.columns([2, 2, 2])
-            cols[0].caption(f"Price: ${trade.get('price', '—')}")
-            cols[1].caption(f"Trade ID: `{trade.get('trade_id', '—')}`")
-            if trade.get("created_at"):
-                cols[2].caption(f"Booked: {trade['created_at']}")
+        _trade_card(trade)
 
 
 def render_trade_by_id_page():

@@ -27,20 +27,29 @@ def restore_login_from_browser():
 
     # Ask the browser if it has a remembered username in localStorage.
     # If so, reload once with it attached as a query param so Python can
-    # pick it up above. The sessionStorage guard prevents an infinite
-    # reload loop if localStorage is empty or unavailable.
+    # pick it up above.
+    #
+    # NOTE: this script runs inside an iframe (components.html), and that
+    # iframe gets re-created on every Streamlit script run -- so its own
+    # sessionStorage is not a reliable place to guard against a reload
+    # loop (it can look "empty" again on the next run even though no
+    # human-visible reload happened). Checking the *top-level* page's own
+    # URL for the query param is reliable instead, since that's the thing
+    # we're actually trying to avoid re-adding.
     components.html(
         """
         <script>
         (function() {
             const remembered = window.localStorage.getItem("eq_username");
-            const alreadyTried = window.sessionStorage.getItem("eq_restore_tried");
-            if (remembered && !alreadyTried) {
-                window.sessionStorage.setItem("eq_restore_tried", "1");
-                const url = new URL(window.parent.location.href);
-                url.searchParams.set("remember_user", remembered);
-                window.parent.location.href = url.toString();
+            if (!remembered) { return; }
+
+            const topUrl = new URL(window.top.location.href);
+            if (topUrl.searchParams.has("remember_user")) {
+                return;  // already in the URL -- Python just hasn't processed it yet
             }
+
+            topUrl.searchParams.set("remember_user", remembered);
+            window.top.location.href = topUrl.toString();
         })();
         </script>
         """,
@@ -56,7 +65,6 @@ def remember_login(username):
         f"""
         <script>
         window.localStorage.setItem("eq_username", {username!r});
-        window.sessionStorage.removeItem("eq_restore_tried");
         </script>
         """,
         height=0,
@@ -69,7 +77,6 @@ def forget_login():
         """
         <script>
         window.localStorage.removeItem("eq_username");
-        window.sessionStorage.removeItem("eq_restore_tried");
         </script>
         """,
         height=0,
