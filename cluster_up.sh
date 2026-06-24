@@ -154,6 +154,7 @@ for NS in data backend secrets; do
 done
 
 # Generate once, apply to all consumer namespaces
+# TODO: Send the password out for adminer access
 PG_PASS=$(openssl rand -base64 24 | tr -d '=+/' | cut -c1-24)
 for NS in data backend; do
     $ENGINE exec -i k8s-toolbox kubectl create secret generic db-credentials \
