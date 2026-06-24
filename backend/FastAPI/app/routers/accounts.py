@@ -1,5 +1,4 @@
-from fastapi import Depends
-from app.main import app
+from fastapi import APIRouter, Depends
 from app.core.logging import logger
 from app.core.security import verify_cookie
 from app.services.account_services import (
@@ -7,6 +6,8 @@ from app.services.account_services import (
     add_account_to_user,
     get_all_users_accounts,
 )
+
+app = APIRouter(tags=["Accounts"])
 
 
 @app.post("/users/account")

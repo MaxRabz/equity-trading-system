@@ -2,11 +2,9 @@ from fastapi import Request, HTTPException
 from redis.exceptions import RedisError
 import time
 import asyncpg
-from app.main import app
 from app.core.logging import logger
 
 
-@app.middleware("http")
 async def logging_middleware(request: Request, call_next):
     start = time.perf_counter()
 

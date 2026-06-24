@@ -1,5 +1,4 @@
-from fastapi import Depends
-from app.main import app
+from fastapi import APIRouter, Depends
 from app.core.logging import logger
 from app.core.security import verify_cookie
 from app.services.position_services import (
@@ -8,6 +7,8 @@ from app.services.position_services import (
     get_all_users_ticker_positions,
     get_account_ticker_position,
 )
+
+app = APIRouter(tags=["Positions"])
 
 
 @app.get("/positions")

@@ -1,10 +1,11 @@
-from fastapi import Response
-from app.main import app
+from fastapi import APIRouter, Response
 from app.core.logging import logger
 from app.core.security import create_cookie
 from app.core.config import DAY_IN_SEC
 from app.models.auth_models import RegisterRequest, LoginRequest
 from app.services.auth_services import register_valid_user, login_valid_user
+
+app = APIRouter(tags=["Login"])
 
 
 @app.post("/register")

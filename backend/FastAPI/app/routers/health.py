@@ -1,7 +1,9 @@
+from fastapi import APIRouter
 import os
 import socket
 import time
-from app.main import app
+
+app = APIRouter(tags=["Health"])
 
 START_TIME = time.time()
 

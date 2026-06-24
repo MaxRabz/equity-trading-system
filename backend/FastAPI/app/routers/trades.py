@@ -1,10 +1,11 @@
-from fastapi import HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request
 from datetime import datetime
-from app.main import app
 from app.core.logging import logger
 from app.core.security import verify_cookie
 from app.models.trade_models import Trade
 from app.services.trade_services import individual_trade, verify_account_access
+
+app = APIRouter(tags=["Trades"])
 
 
 @app.post("/trade")
