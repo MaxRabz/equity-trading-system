@@ -1,5 +1,6 @@
 from locust import HttpUser, task, between
 import uuid
+import random
 
 
 class EquityTradingUser(HttpUser):
@@ -23,6 +24,13 @@ class EquityTradingUser(HttpUser):
 
     @task(10)
     def create_trade(self):
+        ticker = random.choice([
+            "AAPL",
+            "MSFT",
+            "GOOG",
+            "NVDA",
+            "AMZN"
+        ])
 
         self.client.post(
             "/trade",
@@ -30,7 +38,7 @@ class EquityTradingUser(HttpUser):
                 {
                     "account_id": self.account_id,
                     "direction": "Buy",
-                    "ticker": "AAPL",
+                    "ticker": ticker,
                     "quantity": 100,
                     "price": "200.50",
                 }
@@ -47,4 +55,4 @@ class EquityTradingUser(HttpUser):
 
     @task
     def check_health(self):
-        self.client.get("/docs")
+        self.client.get("/probe")

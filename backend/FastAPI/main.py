@@ -10,6 +10,7 @@ import asyncpg
 import os
 import csv
 import sys
+import socket
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
@@ -106,10 +107,27 @@ pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 # Initialize Redis client
 redis_client = AsyncRedis(host=redis_host, port=redis_port_number, db=0)
 
+START_TIME = time.time()
 
 @app.get("/probe")
 async def probe():
-    return {"status": "ok"}
+    hostname = socket.gethostname() # In K8s, this defaults to the Pod Name
+
+    return {
+        "status": "ok",
+        "worker_name": os.getenv("Worker_Name", "not_set"),
+        # K8s Downward API Info
+        "k8s_node": os.getenv("NODE_NAME", "unknown"),
+        "k8s_namespace": os.getenv("POD_NAMESPACE", "unknown"),
+        "k8s_pod_ip": os.getenv("POD_IP", "unknown"),
+        "k8s_pod_name": hostname,
+        # GitOps Info
+        "git_commit": os.getenv("GIT_COMMIT", "unknown"),
+        "environment": os.getenv("ENVIRONMENT", "dev"),
+        # Runtime Info
+        "process_id": os.getpid(),
+        "uptime_seconds": round(time.time() - START_TIME, 2)
+    }
 
 
 @app.middleware("http")
@@ -422,7 +440,7 @@ async def get_users_positions(user_id: str = Depends(verify_cookie)):
                 positions[x_positions["account_id"]].append(
                     {
                         "account_name": real_account["account_name"],
-                        "symbol_ticker": x_positions["ticker"],
+                        "symbol_ticker": x_positions["symbol_ticker"],
                         "quantity": x_positions["quantity"],
                         "created_at": x_positions["created_at"],
                         "updated_at": x_positions["updated_at"],
@@ -621,6 +639,7 @@ async def individual_trade(user_id: str, trade: dict):
 
     trade_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
+    now_str = now.isoformat()
     now_int = int(now.timestamp())
     payload = {
         "trade_id": trade_id,
@@ -692,8 +711,8 @@ async def individual_trade(user_id: str, trade: dict):
                 "account_id": trade["account_id"],
                 "symbol_ticker": trade["ticker"],
                 "quantity": new_position,
-                "created_at": now,
-                "updated_at": now,
+                "created_at": now_str,
+                "updated_at": now_str,
             }
             await redis_client.hset(  # Set the new position
                 redis_dictionaries[2], position_key, json.dumps(position_data)
@@ -708,7 +727,7 @@ async def individual_trade(user_id: str, trade: dict):
 
             # Edit the existing position data
             specific_position["quantity"] = new_position
-            specific_position["updated_at"] = now
+            specific_position["updated_at"] = now_str
             await redis_client.hset(
                 redis_dictionaries[2], position_key, json.dumps(specific_position)
             )
