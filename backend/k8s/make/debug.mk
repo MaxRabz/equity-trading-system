@@ -50,11 +50,11 @@ redis-cli: ## 🔴 Connecting to Redis CLI...
 	@echo "🔴 Connecting to Redis CLI..."
 	@$(DOCKER) exec -it k8s-toolbox kubectl exec -it deployment/redis -n data -- redis-cli
 
-seed-trades: ## 🌱 Spawning temporary uv pod to inject fake trades...
-	@echo "🌱 Spawning temporary uv pod to inject fake trades..."
-	@cat backend/DB/redis-postgres-syncers/test/trades.py | \
-	$(DOCKER) exec -i k8s-toolbox kubectl run trade-seeder --rm -i -n backend \
+seed-all: ## 🌱 Spawning temporary pod to inject all test data (trades, users, accounts, positions)...
+	@echo "🌱 Injecting full test data suite..."
+	@cd backend/DB/redis-postgres-syncers/test && \
+	tar cf - . | $(DOCKER) exec -i k8s-toolbox kubectl run data-seeder --rm -i -n backend \
 		--image=ghcr.io/astral-sh/uv:alpine \
 		--env="REDIS_HOST=redis.data.svc.cluster.local" \
 		--restart=Never \
-		-- sh -c "cat > script.py && uv run script.py"
+		-- sh -c "mkdir /app && cd /app && tar xf - && uv run test_all.py"
