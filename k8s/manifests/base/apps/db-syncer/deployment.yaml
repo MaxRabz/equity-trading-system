@@ -80,6 +80,8 @@ spec:
             - name: RUST_LOG
               value: "debug"
 
+            - name: DELAY
+              value: "180"
             - name: LOKI_URL
               value: "http://loki-stack.monitoring.svc.cluster.local:3100"
 
