@@ -16,6 +16,15 @@ async def individual_trade(user_id: str, trade: dict):
 
     # Ensure it's a valid user
     raw_user = await redis_client.hget(redis_dictionaries[0], user_id)
+    if raw_user is None:
+        logger.error(
+            "Missing Redis user",
+            extra={
+                "user_id": user_id,
+                "redis_hash": redis_dictionaries[0],
+                "raw_user": raw_user,
+            },
+        )
     user_data = json.loads(raw_user)
 
     # Ensure it's a valid account
