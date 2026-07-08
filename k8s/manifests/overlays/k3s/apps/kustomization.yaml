@@ -7,10 +7,9 @@ resources:
 
 patches:
   - path: ingress-overwrite.yaml
-  - target:
-      group: traefik.io
-      version: v1alpha1
+  - patch: |-
+      apiVersion: traefik.io/v1alpha1
       kind: Middleware
-      name: streamlit-fallback
-    patch: |-
+      metadata:
+        name: streamlit-fallback
       $patch: delete
