@@ -120,13 +120,17 @@ install_worker() {
     echo "🎉 Worker Node Bootstrap Complete!"
 }
 
-# Function to show the current token
+# Function to show the current token and IP
 show_token() {
-    # Using sudo test ensures we can read the root-owned file
+    TAILSCALE_IP=$(tailscale ip -4 2>/dev/null || echo "Unknown")
+    
     if sudo test -f /var/lib/rancher/k3s/server/node-token; then
+        echo "======================================"
+        echo "📍 Control Plane IP: ${TAILSCALE_IP}"
         echo "🔑 Current K3s Cluster Token:"
         sudo cat /var/lib/rancher/k3s/server/node-token
         echo ""
+        echo "======================================"
     else
         echo "❌ Token not found. This node might not be a Control Plane."
     fi
@@ -259,6 +263,16 @@ update_self() {
     fi
 }
 
+# Function to list current cluster nodes
+list_nodes() {
+    echo "📋 Current Cluster Nodes:"
+    if command -v kubectl &>/dev/null; then
+        kubectl get nodes -o wide
+    else
+        sudo k3s kubectl get nodes -o wide
+    fi
+}
+
 # Main Menu Loop
 while true; do
     echo ""
@@ -268,26 +282,28 @@ while true; do
     echo "======================================"
     echo "1) Bootstrap/Join Control Plane"
     echo "2) Join as Worker Node"
-    echo "3) Show Cluster Token"
-    echo "4) Configure Local USB Storage"
-    echo "5) Bootstrap FluxCD"
-    echo "6) Uninstall K3s"
-    echo "7) Setup Database Secrets"
-    echo "8) Update Manager"
-    echo "9) Exit"
+    echo "3) Show Cluster Info (Token & IP)"
+    echo "4) List Nodes"
+    echo "5) Configure Local USB Storage"
+    echo "6) Bootstrap FluxCD"
+    echo "7) Uninstall K3s"
+    echo "8) Setup Database Secrets"
+    echo "9) Update Manager"
+    echo "10) Exit"
     echo "======================================"
-    read -p "Select an option [1-9]: " choice
+    read -p "Select an option [1-10]: " choice
 
     case $choice in
     1) install_control_plane ;;
     2) install_worker ;;
     3) show_token ;;
-    4) setup_local_storage ;;
-    5) bootstrap_flux ;;
-    6) uninstall_k3s ;;
-    7) setup_db_secrets ;;
-    8) update_self ;;
-    9)
+    4) list_nodes ;;
+    5) setup_local_storage ;;
+    6) bootstrap_flux ;;
+    7) uninstall_k3s ;;
+    8) setup_db_secrets ;;
+    9) update_self ;;
+    10)
         echo "Goodbye!"
         exit 0
         ;;
