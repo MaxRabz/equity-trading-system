@@ -25,7 +25,10 @@ kind: Ingress
 metadata:
   name: streamlit-ingress
 spec:
-  ingressClassName: traefik
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - ui
   rules:
     - host: ui
       http:
