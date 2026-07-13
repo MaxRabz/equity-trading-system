@@ -1,4 +1,4 @@
-.PHONY: logs-api logs-ui logs-worker logs-syncer logs-cacher logs-adminer logs-postgres logs-pooler logs-redis logs-flux logs-keda logs-all
+.PHONY: logs-api logs-ui logs-worker logs-syncer logs-cacher logs-timeseries logs-adminer logs-postgres logs-pooler logs-redis logs-flux logs-keda logs-all
 
 # ==========================================
 # 📜 LOGS

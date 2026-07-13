@@ -1,4 +1,4 @@
-.PHONY: ks events status status-wide status-svc check-sync sync adminer-info status-images
+.PHONY: ks events status status-wide status-svc check-sync sync status-images
 
 # ==========================================
 # 📊 CLUSTER STATUS
@@ -44,14 +44,6 @@ sync: ## Force Flux to reconcile (Accepts LAYER=all, apps, or data-layer)
 	elif [ "$(LAYER)" = "data-layer" ]; then \
 		$(DOCKER) exec k8s-toolbox flux reconcile kustomization 2-data --with-source; \
 	fi
-
-adminer-info: ## 🌐 Adminer UI: http://adminer.localhost:8080
-	@echo "🌐 Adminer UI: http://adminer.localhost:8080"
-	@echo "🔍 Fetching Postgres Credentials from cluster..."
-	@echo -n "User: "
-	@$(DOCKER) exec k8s-toolbox kubectl get secret db-credentials -n data -o jsonpath='{.data.POSTGRES_USER}' | base64 -d; echo ""
-	@echo -n "Pass: "
-	@$(DOCKER) exec k8s-toolbox kubectl get secret db-credentials -n data -o jsonpath='{.data.POSTGRES_PASSWORD}' | base64 -d; echo ""
 
 status-images: ## 🏷️  Check the exact Docker images running for our custom apps
 	@echo "🏷️  CUSTOM APP IMAGE VERSIONS:"
