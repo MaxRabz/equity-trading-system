@@ -122,6 +122,7 @@ def _render_preview_grid(rows: list[dict]):
     gb = GridOptionsBuilder.from_dataframe(display_df)
     gb.configure_default_column(sortable=True, resizable=True)
     gb.configure_pagination(paginationAutoPageSize=True)
+    gb.configure_grid_options(enableCellTextSelection=True)
 
     # Color rows red/green based on Status column content
     row_style = JsCode("""
@@ -300,11 +301,11 @@ def _render_success_state():
         if col2.button("📊 View Positions"):
             if payload and payload[0].get("account_id"):
                 st.session_state.jump_to_account = payload[0]["account_id"]
-            st.switch_page("pages/all_positions.py")
+            st.switch_page("pages/positions.py")
         if col3.button("📜 View Trades"):
             if payload and payload[0].get("account_id"):
                 st.session_state.jump_to_trades_account = payload[0]["account_id"]
-            st.switch_page("pages/all_trades.py")
+            st.switch_page("pages/trade_history.py")
 
     if failures:
         st.warning(
@@ -326,7 +327,7 @@ def _render_success_state():
 
 
 def render_mass_trade_page():
-    st.header("📋 Mass Trade Booker", anchor=False)
+    st.header("📋 Mass Trade", anchor=False)
 
     # Once a batch has been submitted, show only the success state above
     # (with "Book More Trades" up top) until the user explicitly starts a

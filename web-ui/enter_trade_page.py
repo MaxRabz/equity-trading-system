@@ -16,6 +16,9 @@ def render_enter_trade_page():
     if "last_submission_result" not in st.session_state:
         st.session_state.last_submission_result = None
 
+    if "jump_to_trade_account" in st.session_state:
+        st.session_state.last_submission_result = None
+
     if st.session_state.get("last_submission_result"):
         _render_post_submission_state()
     else:
@@ -93,11 +96,11 @@ def _render_post_submission_state():
         if col2.button("📊 View Positions"):
             if payload and payload[0].get("account_id"):
                 st.session_state.jump_to_account = payload[0]["account_id"]
-            st.switch_page("pages/all_positions.py")
+            st.switch_page("pages/positions.py")
         if col3.button("💸 View Trades"):
             if payload and payload[0].get("account_id"):
                 st.session_state.jump_to_trades_account = payload[0]["account_id"]
-            st.switch_page("pages/all_trades.py")
+            st.switch_page("pages/trade_history.py")
 
 
 def _render_submission_results(successes, failures):
@@ -118,7 +121,7 @@ def _render_submission_results(successes, failures):
                 col_tid.caption(f"Trade ID: `{trade_id}`")
                 if col_edit.button("✏️", key=f"edit_booked_{trade_id}", help="Edit Trade"):
                     st.session_state.editing_trade_id = trade_id
-                    st.switch_page("pages/update_trade.py")
+                    st.switch_page("pages/edit_trade.py")
 
     for entry in failures:
         reason = (
@@ -178,9 +181,9 @@ def _render_builder_step():
             }
 
         if editing_trade:
-            col_save, col_cancel = st.columns([1, 1])
-            save_clicked = col_save.form_submit_button("💾 Save Changes", type="primary")
-            cancel_clicked = col_cancel.form_submit_button("Cancel")
+            col_save, col_cancel = st.columns(2)
+            save_clicked = col_save.form_submit_button("💾 Save Changes", type="primary", use_container_width=True)
+            cancel_clicked = col_cancel.form_submit_button("Cancel", use_container_width=True)
             
             if save_clicked:
                 if not account_id or not ticker:
@@ -193,10 +196,10 @@ def _render_builder_step():
                 st.session_state.editing_trade_index = None
                 st.rerun()
         else:
-            col_add, col_submit, col_cancel = st.columns([2, 2, 2])
-            add_clicked = col_add.form_submit_button("＋ Add to Queue", type="primary")
-            submit_clicked = col_submit.form_submit_button("🚀 Queue & Submit", type="primary")
-            cancel_clicked = col_cancel.form_submit_button("Clear Form")
+            col_add, col_submit, col_cancel = st.columns(3)
+            add_clicked = col_add.form_submit_button("＋ Add to Queue", type="primary", use_container_width=True)
+            submit_clicked = col_submit.form_submit_button("🚀 Queue & Submit", type="primary", use_container_width=True)
+            cancel_clicked = col_cancel.form_submit_button("Clear Form", use_container_width=True)
 
             if add_clicked or submit_clicked:
                 if not account_id or not ticker:
