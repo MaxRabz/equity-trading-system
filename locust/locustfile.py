@@ -20,6 +20,7 @@ class EquityTradingUser(HttpUser):
         "PG",
         "KO",
         "PEP",
+        
         "JNJ",
         "V",
         "MA",
